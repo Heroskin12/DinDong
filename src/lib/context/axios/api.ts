@@ -163,6 +163,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
+    if (axios.isCancel(error)) {
+      throw error;
+    }
+
     if (!error.response) {
       console.error("Network error:", error.code, error.message);
       throw error;

@@ -8,7 +8,7 @@ export function useUsers() {
 
   return useQuery({
     queryKey: usersKeys.lists(),
-    queryFn: () => getUsers(),
+    queryFn: ({ signal }) => getUsers(signal),
   });
 }
 
@@ -17,7 +17,7 @@ export function useUser(id: number | undefined) {
 
   return useQuery({
     queryKey: usersKeys.detail(id!),
-    queryFn: () => getUserById(id!),
+    queryFn: ({ signal }) => getUserById(id!, signal),
     enabled: id !== undefined,
   });
 }
