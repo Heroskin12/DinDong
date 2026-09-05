@@ -1,3 +1,5 @@
+"use client";
+
 import { ReactNode } from "react";
 import { AxiosContext } from "./AxiosContext";
 import type { AxiosInstance } from "axios";
