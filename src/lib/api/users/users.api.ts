@@ -1,5 +1,5 @@
-import { useAxios } from "../context/axios/AxiosContext";
-import type { User } from "../types/User";
+import { useAxios } from "../../context/axios/AxiosContext";
+import type { User } from "../../types/User";
 
 export function useUsersApi() {
   const client = useAxios();
