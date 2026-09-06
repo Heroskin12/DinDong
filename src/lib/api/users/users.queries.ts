@@ -28,8 +28,7 @@ export function useAddUser() {
 
   return useMutation({
     mutationFn: (user: Omit<User, "id">) => addUser(user),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: usersKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: usersKeys.all }),
   });
 }
 
@@ -45,8 +44,12 @@ export function useUpdateUser() {
       id: number;
       updates: Partial<Omit<User, "id">>;
     }) => updateUserById(id, updates),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: usersKeys.all }),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(usersKeys.detail(updatedUser.id), updatedUser);
+      queryClient.setQueryData(usersKeys.lists(), (old: User[] | undefined) =>
+        old?.map((u) => (u.id === updatedUser.id ? updatedUser : u)),
+      );
+    },
   });
 }
 
@@ -56,7 +59,6 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: (id: number) => deleteUserById(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: usersKeys.all }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: usersKeys.all }),
   });
 }
