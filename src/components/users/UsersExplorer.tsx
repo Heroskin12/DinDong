@@ -83,7 +83,7 @@ export default function UsersExplorer() {
     isRefetching: isDetailRefetching,
   } = useUser(selectedId);
   const { mutate: addUser, isPending: isAdding } = useAddUser();
-  const { mutate: updateUser } = useUpdateUser();
+  const { mutate: updateUser, isError: isUpdateError } = useUpdateUser();
   const { mutate: deleteUser } = useDeleteUser();
 
   function handleAddUser(event: React.SubmitEvent<HTMLFormElement>) {
@@ -264,6 +264,9 @@ export default function UsersExplorer() {
               <input name="name" defaultValue={selectedUser.name} />
               <button type="submit">Rename</button>
             </form>
+            {isUpdateError && (
+              <p role="alert">Couldn&apos;t save the rename. Reverted to the previous name.</p>
+            )}
           </div>
         )}
       </section>

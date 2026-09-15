@@ -19,6 +19,7 @@ export function useUser(id: number | undefined) {
     queryKey: usersKeys.detail(id!),
     queryFn: ({ signal }) => getUserById(id!, signal),
     enabled: id !== undefined,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -32,26 +33,59 @@ export function useAddUser() {
   });
 }
 
-export function useUpdateUser() {
-  const queryClient = useQueryClient();
-  const { updateUserById } = useUsersApi();
+  export function useUpdateUser() {
+    const queryClient = useQueryClient();
+    const { updateUserById } = useUsersApi();
 
-  return useMutation({
-    mutationFn: ({
-      id,
-      updates,
-    }: {
-      id: number;
-      updates: Partial<Omit<User, "id">>;
-    }) => updateUserById(id, updates),
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(usersKeys.detail(updatedUser.id), updatedUser);
-      queryClient.setQueryData(usersKeys.lists(), (old: User[] | undefined) =>
-        old?.map((u) => (u.id === updatedUser.id ? updatedUser : u)),
-      );
-    },
-  });
-}
+    return useMutation({
+      mutationFn: ({
+        id,
+        updates,
+      }: {
+        id: number;
+        updates: Partial<Omit<User, "id">>;
+      }) => updateUserById(id, updates),
+
+      onMutate: async ({ id, updates }) => {
+        await queryClient.cancelQueries({ queryKey: usersKeys.detail(id) });
+        await queryClient.cancelQueries({ queryKey: usersKeys.lists() });
+
+        const previousDetail = queryClient.getQueryData<User>(
+          usersKeys.detail(id),
+        );
+        const previousList = queryClient.getQueryData<User[]>(
+          usersKeys.lists(),
+        );
+
+        queryClient.setQueryData<User>(usersKeys.detail(id), (old) =>
+          old ? { ...old, ...updates } : old,
+        );
+        queryClient.setQueryData<User[]>(usersKeys.lists(), (old) =>
+          old?.map((u) => (u.id === id ? { ...u, ...updates } : u)),
+        );
+
+        return { previousDetail, previousList };
+      },
+
+      onError: (_err, { id }, context) => {
+        if (context?.previousDetail) {
+          queryClient.setQueryData(
+            usersKeys.detail(id),
+            context.previousDetail,
+          );
+        }
+        if (context?.previousList) {
+          queryClient.setQueryData(usersKeys.lists(), context.previousList);
+        }
+      },
+
+      onSettled: (_data, _err, { id }) => {
+        queryClient.invalidateQueries({ queryKey: usersKeys.detail(id) });
+        queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+      },
+    });
+  }
+
 
 export function useDeleteUser() {
   const queryClient = useQueryClient();
