@@ -71,11 +71,19 @@ export default function UsersExplorer() {
     }));
   }
 
-  const { data: users, isLoading, isError } = useUsers();
-  const { data: selectedUser, isLoading: isDetailLoading } =
-    useUser(selectedId);
+  const {
+    data: users,
+    isLoading,
+    isError,
+    isRefetching: isUserListRefetching,
+  } = useUsers();
+  const {
+    data: selectedUser,
+    isLoading: isDetailLoading,
+    isRefetching: isDetailRefetching,
+  } = useUser(selectedId);
   const { mutate: addUser, isPending: isAdding } = useAddUser();
-  const { mutate: updateUser } = useUpdateUser();
+  const { mutate: updateUser, isError: isUpdateError } = useUpdateUser();
   const { mutate: deleteUser } = useDeleteUser();
 
   function handleAddUser(event: React.SubmitEvent<HTMLFormElement>) {
@@ -104,6 +112,7 @@ export default function UsersExplorer() {
     <div className={styles.container}>
       <section className={styles.list}>
         <h2>Users</h2>
+        {isUserListRefetching && <p>Refreshing...</p>}
         <ul>
           {userList.map((user) => (
             <li
@@ -233,8 +242,10 @@ export default function UsersExplorer() {
 
       <section className={styles.detail}>
         <h2>Detail</h2>
+
         {selectedId === undefined && <p>Pick a user from the list.</p>}
         {selectedId !== undefined && isDetailLoading && <p>Loading...</p>}
+        {selectedId !== undefined && isDetailRefetching && <p>Refreshing...</p>}
         {selectedId !== undefined && !isDetailLoading && selectedUser && (
           <div>
             <p>Name: {selectedUser.name}</p>
@@ -253,6 +264,9 @@ export default function UsersExplorer() {
               <input name="name" defaultValue={selectedUser.name} />
               <button type="submit">Rename</button>
             </form>
+            {isUpdateError && (
+              <p role="alert">Couldn&apos;t save the rename. Reverted to the previous name.</p>
+            )}
           </div>
         )}
       </section>

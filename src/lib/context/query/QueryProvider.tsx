@@ -3,13 +3,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState, type ReactNode } from "react";
+import { config } from "site/lib/config";
 
 export function QueryProvider({ children }: { readonly children: ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { retry: false },
+          queries: {
+            retry: false,
+            staleTime: 60 * 1000,
+            gcTime: 5 * 60 * 1000,
+          },
         },
       }),
   );
@@ -17,7 +22,7 @@ export function QueryProvider({ children }: { readonly children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools />
+      {config.environment !== "production" && <ReactQueryDevtools />}
     </QueryClientProvider>
   );
 }
